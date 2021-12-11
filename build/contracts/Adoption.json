@@ -295,10 +295,10 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        94,
-                        95
+                        275,
+                        276
                       ],
-                      "referencedDeclaration": 94,
+                      "referencedDeclaration": 275,
                       "src": "167:7:0",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -381,7 +381,7 @@
                         "name": "msg",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 91,
+                        "referencedDeclaration": 272,
                         "src": "228:3:0",
                         "typeDescriptions": {
                           "typeIdentifier": "t_magic_message",
@@ -831,10 +831,10 @@
                                 }
                               ],
                               "overloadedDeclarations": [
-                                94,
-                                95
+                                275,
+                                276
                               ],
-                              "referencedDeclaration": 94,
+                              "referencedDeclaration": 275,
                               "type": "function (bool) pure",
                               "value": "require"
                             },
@@ -1048,7 +1048,7 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 91,
+                                  "referencedDeclaration": 272,
                                   "type": "msg",
                                   "value": "msg"
                                 },
@@ -1252,8 +1252,7 @@
     }
   },
   "schemaVersion": "3.4.3",
-  "updatedAt": "2021-12-11T15:30:02.720Z",
-  "networkType": "ethereum",
+  "updatedAt": "2021-12-11T19:14:30.940Z",
   "devdoc": {
     "methods": {}
   },
