@@ -1,25 +1,9 @@
 App = {
   web3Provider: null,
   contracts: {},
+  currentAccount: null,
 
   init: async function() {
-    // Load pets.
-    // $.getJSON('../pets.json', function(data) {
-    //   var petsRow = $('#petsRow');
-    //   var petTemplate = $('#petTemplate');
-
-    //   for (i = 0; i < data.length; i ++) {
-    //     petTemplate.find('.panel-title').text(data[i].name);
-    //     petTemplate.find('img').attr('src', data[i].picture);
-    //     petTemplate.find('.pet-breed').text(data[i].breed);
-    //     petTemplate.find('.pet-age').text(data[i].age);
-    //     petTemplate.find('.pet-location').text(data[i].location);
-    //     petTemplate.find('.btn-adopt').attr('data-id', data[i].id);
-
-    //     petsRow.append(petTemplate.html());
-    //   }
-    // });
-
     return await App.initWeb3();
   },
 
@@ -45,6 +29,8 @@ App = {
     }
     web3 = new Web3(App.web3Provider);
 
+    currentAccount = web3.currentProvider.selectedAddress
+
     return App.initContract();
   },
 
@@ -67,56 +53,51 @@ App = {
 
   bindEvents: function() {
     $(document).on('click', '.add-property', App.handleAdd);
-
-    document.querySelector('form').addEventListener('submit', (e) => {
-      const data = Object.fromEntries(new FormData(e.target).entries());
-      console.log(data)
-    });
   },
 
   getAvailableHouses: function() {
-    // var adoptionInstance;
+    App.contracts.RentContract.deployed().then(function(instance) {
+      var rentContract = instance;
 
-    // App.contracts.Adoption.deployed().then(function(instance) {
-    //   adoptionInstance = instance;
-    
-    //   return adoptionInstance.getAdopters.call();
-    // }).then(function(adopters) {
-    //   for (i = 0; i < adopters.length; i++) {
-    //     if (adopters[i] !== '0x0000000000000000000000000000000000000000') {
-    //       $('.panel-pet').eq(i).find('button').text('Success').attr('disabled', true);
-    //     }
-    //   }
-    // }).catch(function(err) {
-    //   console.log(err.message);
-    // });
+      return rentContract.HousesCount.call();
+    }).then(function (result) {
+      
+      // $.getJSON('../pets.json', function (data) {
+      //   var petsRow = $('#petsRow');
+      //   var petTemplate = $('#petTemplate');
 
+      //   for (i = 0; i < result; i++) {
+      //     petTemplate.find('.panel-title').text(data[i].name);
+      //     petTemplate.find('img').attr('src', data[i].picture);
+      //     petTemplate.find('.pet-breed').text(data[i].breed);
+      //     petTemplate.find('.pet-age').text(data[i].age);
+      //     petTemplate.find('.pet-location').text(data[i].location);
+      //     petTemplate.find('.btn-adopt').attr('data-id', data[i].id);
+
+      //     petsRow.append(petTemplate.html());
+      //   }
+      // });
+    }).catch(function (err) {
+      console.log(err.message);
+    });
   },
 
   handleAdd: function (event) {
+
     event.preventDefault();
+
     var address = $('#propertyAddress').val();
     var price = $('#rentPrice').val();
 
-    var RentContract;
+    App.contracts.RentContract.deployed().then(function (instance) {
 
-    web3.eth.getAccounts(function (error, accounts) {
-      if (error) {
-        console.log(error);
-      }
-
-      var account = accounts[0];
-
-      App.contracts.RentContract.deployed().then(function (instance) {
-
-        RentContract = instance;
-        // Execute adopt as a transaction by sending account
-        return RentContract.AddHouse(address, price, { from: account });
-      // }).then(function (result) {
-      //   return App.markAdopted();
-      }).catch(function (err) {
-        console.log(err.message);
-      });
+      var rentContract = instance;
+      // Execute adopt as a transaction by sending account
+      return rentContract.AddHouse(address, price, { from: currentAccount });
+      }).then(function (result) {
+        return App.getAvailableHouses();
+    }).catch(function (err) {
+      console.log(err.message);
     });
   }
 
