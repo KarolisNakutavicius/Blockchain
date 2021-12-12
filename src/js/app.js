@@ -56,48 +56,38 @@ App = {
   },
 
   getAvailableHouses: function () {
-
+    
     var rentContract;
 
     App.contracts.RentContract.deployed().then(function (instance) {
       rentContract = instance;
 
       return rentContract.AvailableHouses();
-    }).then(function (availableHousesIds) {
+    }).then(async function (availableHousesIds) {
 
       var ids = availableHousesIds;
-
-      $.getJSON('../pets.json', function (data) {
-
-        var petsRow = $('#petsRow');
-        var petTemplate = $('#petTemplate');
+      var petsRow = $('#petsRow');
+      var petTemplate = $('#petTemplate');
 
         for (var i = 0; i < ids.length; i++) {
 
           var id = ids[i].c[0] // i hate javascript        
-          console.log(id);
 
-          // need somehow to await
-          rentContract.GetHouseAddress(id).then(function (result) {
+          await rentContract.GetHouseAddress(id).then(function (result) {
             petTemplate.find('.pet-location').text(result);
-            console.log(id);
             return rentContract.GetRentCost(id);
           })
             .then(function (result) {
-              // console.log(result);
               petTemplate.find('.pet-age').text(result);
             })
             .catch((err) => {
               console.log(err);
             })
             .then(function (result) {
-              petTemplate.find('img').attr('src', data[i].picture);
-              petTemplate.find('.pet-breed').text(data[i].breed);
-              petTemplate.find('.btn-adopt').attr('data-id', data[i].id);
-              petsRow.append(petTemplate.html());
+              petTemplate.find('.btn-adopt').attr('data-id', id);
+              petsRow.append(petTemplate.html());           
             })
         }
-      });
     }).catch(function (err) {
       console.log(err.message);
     });
