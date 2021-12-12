@@ -56,38 +56,34 @@ App = {
   },
 
   getAvailableHouses: function () {
-    
+
     var rentContract;
 
     App.contracts.RentContract.deployed().then(function (instance) {
+
       rentContract = instance;
 
-      return rentContract.AvailableHouses();
+      return rentContract.AvailableHouses();           
+
     }).then(async function (availableHousesIds) {
 
       var ids = availableHousesIds;
-      var petsRow = $('#petsRow');
-      var petTemplate = $('#petTemplate');
+      var houseRow = $('#housesRow');
+      var houseTemplate = $('#housesTemplate');
 
         for (var i = 0; i < ids.length; i++) {
 
-          var id = ids[i].c[0] // i hate javascript        
+          var id = ids[i].c[0] // ??? i hate javascript        
 
-          await rentContract.GetHouseAddress(id).then(function (result) {
-            petTemplate.find('.pet-location').text(result);
-            return rentContract.GetRentCost(id);
-          })
-            .then(function (result) {
-              petTemplate.find('.pet-age').text(result);
-            })
-            .catch((err) => {
-              console.log(err);
-            })
-            .then(function (result) {
-              petTemplate.find('.btn-adopt').attr('data-id', id);
-              petsRow.append(petTemplate.html());           
-            })
-        }
+          await rentContract.GetHouseAddress(id).then(function (result) {     
+            houseTemplate.find('.house-location').text(result);
+            return rentContract.GetRentCost(id);            
+          }).then(function (result) {
+            houseTemplate.find('.rent-cost').text(result);
+            }).then(function (){
+              houseTemplate.find('.btn-rent').attr('data-id', id);
+              houseRow.append(houseTemplate.html());       
+            })}
     }).catch(function (err) {
       console.log(err.message);
     });
