@@ -22,9 +22,9 @@ contract RentContract
         return Houses[id].houseAddress;
     }
 
-    function GetRentCost(int256 id) public view returns (uint256)
+    function GetRentCost(int256 id) public view returns (int)
     {
-        return Houses[id].rentCost;
+        return int(Houses[id].rentCost);
     }
 
     
@@ -84,17 +84,17 @@ contract RentContract
         for (int i = 1; i <= HousesCount; i++)
         {
             if (Houses[i].rentEndsAt < block.timestamp) {
-                resultCount++;
+                resultCount++;  // step 1 - determine the result count
             }
         }
 
-        int256[] memory result = new int256[](resultCount);
+        int256[] memory result = new int256[](resultCount);  // step 2 - create the fixed-length array
         uint256 j;
 
         for (int i = 1; i <= HousesCount; i++) 
         {
             if (Houses[i].rentEndsAt < block.timestamp) {
-                result[j] = Houses[i].id;
+                result[j] = Houses[i].id;  // step 3 - fill the array
                 j++;
             }
         }
