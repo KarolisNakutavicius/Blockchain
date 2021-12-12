@@ -56,27 +56,35 @@ App = {
   },
 
   getAvailableHouses: function() {
+
+    var rentContract;
+
     App.contracts.RentContract.deployed().then(function(instance) {
-      var rentContract = instance;
+      rentContract = instance;
 
-      return rentContract.HousesCount.call();
-    }).then(function (result) {
-      
-      // $.getJSON('../pets.json', function (data) {
-      //   var petsRow = $('#petsRow');
-      //   var petTemplate = $('#petTemplate');
+      return rentContract.AvailableHouses();
+    }).then(function (availableHousesIds) {
 
-      //   for (i = 0; i < result; i++) {
-      //     petTemplate.find('.panel-title').text(data[i].name);
-      //     petTemplate.find('img').attr('src', data[i].picture);
-      //     petTemplate.find('.pet-breed').text(data[i].breed);
-      //     petTemplate.find('.pet-age').text(data[i].age);
-      //     petTemplate.find('.pet-location').text(data[i].location);
-      //     petTemplate.find('.btn-adopt').attr('data-id', data[i].id);
+      $.getJSON('../pets.json', function (data) {
 
-      //     petsRow.append(petTemplate.html());
-      //   }
-      // });
+        var petsRow = $('#petsRow');
+        var petTemplate = $('#petTemplate');
+
+        for (i = 0; i < availableHousesIds.length; i++) {
+
+          var promise = rentContract.GetHouseAddress([availableHousesIds[i]]);
+
+          promise.then(function (result){
+            console.log(result);
+            petTemplate.find('.pet-location').text(result);
+            petTemplate.find('img').attr('src', data[i].picture);
+            petTemplate.find('.pet-breed').text(data[i].breed);
+            petTemplate.find('.pet-age').text(data[i].age);
+            petTemplate.find('.btn-adopt').attr('data-id', data[i].id);
+            petsRow.append(petTemplate.html());
+          });
+        }
+      });
     }).catch(function (err) {
       console.log(err.message);
     });

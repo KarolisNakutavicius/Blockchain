@@ -11,7 +11,7 @@
 
   <body>
 
-    <div class="container">
+    <div class="container" style="position: relative">
       <div class="row">
         <div class="col-xs-12 col-sm-8 col-sm-push-2">
           <h1 class="text-center">Renting Service</h1>
@@ -20,19 +20,30 @@
         </div>
       </div>
 
-      <form>
-        <div class="form-group">
-          <label for="exampleInputEmail1">Address</label>
-          <input id="propertyAddress"class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter address">
-          <small id="emailHelp" class="form-text text-muted">Add the address of your property.</small>
+      <div class="row mt-5">
+        <form>
+          <div class="form-group">
+            <label for="exampleInputEmail1">Address</label>
+            <input id="propertyAddress" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"
+              placeholder="Enter address">
+            <small id="emailHelp" class="form-text text-muted">Add the address of your property.</small>
+          </div>
+          <div class="form-group">
+            <label for="exampleInputPassword1">Rent price</label>
+            <input id="rentPrice" type="number" class="form-control" id="exampleInputPassword1" placeholder="Rent price">
+            <small id="emailHelp" class="form-text text-muted">Rent price in ETH for a month</small>
+          </div>
+          <button class="btn add-property" type="submit" class="btn btn-primary">Submit</button>
+        </form>
+      </div>
+
+      <div class="row">
+        <div class="col-xs-12 col-sm-8 col-sm-push-2">
+          <h1 class="text-center">Houses to rent</h1>
+          <hr/>
+          <br/>
         </div>
-        <div class="form-group">
-          <label for="exampleInputPassword1">Rent price</label>
-          <input id="rentPrice" type="number" class="form-control" id="exampleInputPassword1" placeholder="Rent price">
-          <small id="emailHelp" class="form-text text-muted">Rent price in ETH for a month</small>
-        </div>
-        <button class="btn add-property" type="submit" class="btn btn-primary">Submit</button>
-      </form>
+      </div>
 
       <div id="petsRow" class="row">
         <!-- PETS LOAD HERE -->
@@ -41,7 +52,7 @@
 
     <div id="petTemplate" style="display: none;">
       <div class="col-sm-6 col-md-4 col-lg-3">
-        <div class="panel panel-default panel-pet">
+        <div class="">
           <div class="panel-heading">
             <h3 class="panel-title">Scrappy</h3>
           </div>

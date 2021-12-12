@@ -6,42 +6,52 @@ contract RentContract
     struct House 
     {
         int256 id;
-        string _address;
-        uint256 _rentCost;
-        bool _isRented;
-        address payable _ownerAddress;
-        address _renterAddress;
-        uint256 _rentEndsAt;
+        string houseAddress;
+        uint256 rentCost;
+        address payable ownerAddress;
+        address renterAddress;
+        uint256 rentEndsAt;
     }
 
     mapping(int256 => House) public Houses;
 
     int256 public HousesCount;
+
+    function GetHouseAddress(int256 id) public view returns (string memory)
+    {
+        return Houses[id].houseAddress;
+    }
+
+    function GetRentCost(int256 id) public view returns (uint256)
+    {
+        return Houses[id].rentCost;
+    }
+
     
-    function AddHouse(string memory houseAddress, uint256 _rentCost) public
+    function AddHouse(string memory houseAddress, uint256 rentCost) public
     {
         HousesCount++;
 
-        House memory house = House(HousesCount, houseAddress, _rentCost, false, msg.sender, address(0), 0);
+        House memory house = House(HousesCount, houseAddress, rentCost, msg.sender, address(0), 0);
         
         Houses[HousesCount] = house;
     }
 
     function UpdateCost(int256 id, uint256 newCost) public returns (bool)
     {
-        if (Houses[id]._ownerAddress != msg.sender || Houses[id]._isRented)
+        if (Houses[id].ownerAddress != msg.sender || Houses[id].rentEndsAt > block.timestamp)
         {
             return false;
         }
 
-        Houses[id]._rentCost = newCost;
+        Houses[id].rentCost = newCost;
 
         return true;
     }
 
     function RemoveHouse(int256 id) public returns (bool)
     {
-        if (Houses[id]._ownerAddress != msg.sender || Houses[id]._isRented)
+        if (Houses[id].ownerAddress != msg.sender || Houses[id].rentEndsAt > block.timestamp)
         {
             return false;
         }
@@ -55,18 +65,39 @@ contract RentContract
     {
         House memory houseToRent = Houses[id];
         
-        if (houseToRent._renterAddress != address(0))
+        if (Houses[id].rentEndsAt > block.timestamp || Houses[id].renterAddress == msg.sender)
         {
             return;
-        }
-        
-        //payment
-        houseToRent._ownerAddress.transfer(houseToRent._rentCost * 10**18);
-        
-        houseToRent._renterAddress = msg.sender;
-        
-        houseToRent._isRented = true;
+        }       
 
-        houseToRent._rentEndsAt = block.timestamp + (4 * 7 days);       
+        houseToRent.ownerAddress.transfer(houseToRent.rentCost * 10**18);
+        
+        Houses[id].renterAddress = msg.sender;
+        
+        Houses[id].rentEndsAt = now + (4 * 1 weeks);
+    }
+
+    function AvailableHouses() public view returns(int256[] memory) 
+    {
+        uint256 resultCount;
+
+        for (int i = 1; i <= HousesCount; i++)
+        {
+            if (Houses[i].rentEndsAt < block.timestamp) {
+                resultCount++;
+            }
+        }
+
+        int256[] memory result = new int256[](resultCount);
+        uint256 j;
+
+        for (int i = 1; i <= HousesCount; i++) 
+        {
+            if (Houses[i].rentEndsAt < block.timestamp) {
+                result[j] = Houses[i].id;
+                j++;
+            }
+        }
+        return result; 
     }
 }
