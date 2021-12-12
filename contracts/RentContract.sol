@@ -83,18 +83,66 @@ contract RentContract
 
         for (int i = 1; i <= HousesCount; i++)
         {
-            if (Houses[i].rentEndsAt < block.timestamp) {
-                resultCount++;  // step 1 - determine the result count
+            if (Houses[i].ownerAddress != msg.sender && Houses[i].rentEndsAt < block.timestamp) {
+                resultCount++;
             }
         }
 
-        int256[] memory result = new int256[](resultCount);  // step 2 - create the fixed-length array
+        int256[] memory result = new int256[](resultCount);
         uint256 j;
 
         for (int i = 1; i <= HousesCount; i++) 
         {
-            if (Houses[i].rentEndsAt < block.timestamp) {
-                result[j] = Houses[i].id;  // step 3 - fill the array
+            if (Houses[i].ownerAddress != msg.sender && Houses[i].rentEndsAt < block.timestamp) {
+                result[j] = Houses[i].id;
+                j++;
+            }
+        }
+        return result; 
+    }
+
+    function GetOwnedHouses() public view returns(int256[] memory) 
+    {
+        uint256 resultCount;
+
+        for (int i = 1; i <= HousesCount; i++)
+        {
+            if (Houses[i].ownerAddress == msg.sender) {
+                resultCount++;
+            }
+        }
+
+        int256[] memory result = new int256[](resultCount);
+        uint256 j;
+
+        for (int i = 1; i <= HousesCount; i++) 
+        {
+            if (Houses[i].ownerAddress == msg.sender) {
+                result[j] = Houses[i].id;
+                j++;
+            }
+        }
+        return result; 
+    }
+
+    function GetRentedHouses() public view returns(int256[] memory) 
+    {
+        uint256 resultCount;
+
+        for (int i = 1; i <= HousesCount; i++)
+        {
+            if (Houses[i].renterAddress == msg.sender && Houses[i].rentEndsAt > block.timestamp) {
+                resultCount++;
+            }
+        }
+
+        int256[] memory result = new int256[](resultCount);
+        uint256 j;
+
+        for (int i = 1; i <= HousesCount; i++) 
+        {
+            if (Houses[i].renterAddress == msg.sender && Houses[i].rentEndsAt > block.timestamp) {
+                result[j] = Houses[i].id;
                 j++;
             }
         }

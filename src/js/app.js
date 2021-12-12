@@ -45,7 +45,7 @@ App = {
       App.contracts.RentContract.setProvider(App.web3Provider);
 
       // Use our contract to retrieve and mark the adopted pets
-      return App.getAvailableHouses();
+      return App.getAllHouses();
     });
 
     return App.bindEvents();
@@ -53,6 +53,13 @@ App = {
 
   bindEvents: function() {
     $(document).on('click', '.add-property', App.handleAdd);
+  },
+
+  getAllHouses: function()
+  {
+    App.getAvailableHouses()
+    App.getOwnedHouses()
+    App.getRentedHouses()
   },
 
   getAvailableHouses: function () {
@@ -63,12 +70,80 @@ App = {
 
       rentContract = instance;
 
-      return rentContract.AvailableHouses();           
+      return rentContract.AvailableHouses({from:currentAccount});           
 
     }).then(async function (availableHousesIds) {
 
       var ids = availableHousesIds;
-      var houseRow = $('#housesRow');
+      var houseRow = $('#housesToRentRow');
+      var houseTemplate = $('#housesTemplate');
+
+        for (var i = 0; i < ids.length; i++) {
+
+          var id = ids[i].c[0] // ??? i hate javascript        
+
+          await rentContract.GetHouseAddress(id).then(function (result) {     
+            houseTemplate.find('.house-location').text(result);
+            return rentContract.GetRentCost(id);            
+          }).then(function (result) {
+            houseTemplate.find('.rent-cost').text(result);
+            }).then(function (){
+              houseTemplate.find('.btn-rent').attr('data-id', id);
+              houseRow.append(houseTemplate.html());       
+            })}
+    }).catch(function (err) {
+      console.log(err.message);
+    });
+  },
+
+  getOwnedHouses: function()
+  {
+    var rentContract;
+
+    App.contracts.RentContract.deployed().then(function (instance) {
+
+      rentContract = instance;
+
+      return rentContract.GetOwnedHouses({from:currentAccount});           
+    }).then(async function (availableHousesIds) {
+
+      var ids = availableHousesIds;
+      var houseRow = $('#housesOwnedRow');
+      var houseTemplate = $('#housesTemplate');
+
+        for (var i = 0; i < ids.length; i++) {
+
+          var id = ids[i].c[0] // ??? i hate javascript        
+
+          console.log(id);
+
+          await rentContract.GetHouseAddress(id).then(function (result) {     
+            houseTemplate.find('.house-location').text(result);
+            return rentContract.GetRentCost(id);            
+          }).then(function (result) {
+            houseTemplate.find('.rent-cost').text(result);
+            }).then(function (){
+              houseTemplate.find('.btn-rent').attr('data-id', id);
+              houseRow.append(houseTemplate.html());       
+            })}
+    }).catch(function (err) {
+      console.log(err.message);
+    });
+  },
+
+  getRentedHouses: function()
+  {
+    var rentContract;
+
+    App.contracts.RentContract.deployed().then(function (instance) {
+
+      rentContract = instance;
+
+      return rentContract.GerRentedHouses({from:currentAccount});           
+    }).then(async function (availableHousesIds) {
+
+      var ids = availableHousesIds;
+      var houseRow = $('#housesRentedRow');
       var houseTemplate = $('#housesTemplate');
 
         for (var i = 0; i < ids.length; i++) {
