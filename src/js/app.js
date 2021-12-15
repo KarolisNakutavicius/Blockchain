@@ -12,18 +12,14 @@ App = {
     if (window.ethereum) {
       App.web3Provider = window.ethereum;
       try {
-        // Request account access
         await window.ethereum.request({ method: "eth_requestAccounts" });;
       } catch (error) {
-        // User denied account access...
         console.error("User denied account access")
       }
     }
-    // Legacy dapp browsers...
     else if (window.web3) {
       App.web3Provider = window.web3.currentProvider;
     }
-    // If no injected web3 instance is detected, fall back to Ganache
     else {
       App.web3Provider = new Web3.providers.HttpProvider('http://localhost:7545');
     }
@@ -37,14 +33,11 @@ App = {
   initContract: function() {
 
     $.getJSON('RentContract.json', function (data) {
-      // Get the necessary contract artifact file and instantiate it with @truffle/contract
       var RentArtifact = data;
       App.contracts.RentContract = TruffleContract(RentArtifact);
 
-      // Set the provider for our contract
       App.contracts.RentContract.setProvider(App.web3Provider);
 
-      // Use our contract to retrieve and mark the adopted pets
       return App.getAllHouses();
     });
 
@@ -54,6 +47,9 @@ App = {
   bindEvents: function() {
     $(document).on('click', '.add-property', App.handleAdd);
     $(document).on('click', '.btn-rent', App.handleRent);
+    window.ethereum.on('accountsChanged', function (accounts) {
+      location.reload()
+    })
   },
 
   handleRent: function(event) {
@@ -73,11 +69,18 @@ App = {
       var cost = result.c[0]
       console.log(cost);
       rentContract.RentFrom(houseId, {value: cost * 10**18, from:currentAccount})
-    });  
+    }).then(function(result)
+    {
+      location.reload()
+    });
+    
   },
 
   getAllHouses: function()
   {
+    var addressToSet = document.getElementById("currentAddress").textContent = currentAccount;
+    addressToSet.value
+    console.log(addressToSet);
     App.getAvailableHouses()
     App.getOwnedHouses()
     App.getRentedHouses()
@@ -144,7 +147,7 @@ App = {
           }).then(function (result) {
             houseTemplate.find('.rent-cost').text(result);
             }).then(function (){
-              houseTemplate.find('.btn-rent').attr('data-id', id);
+              houseTemplate.find('.btn-rent').hide()
               houseRow.append(houseTemplate.html());       
             })}
     }).catch(function (err) {
@@ -177,7 +180,7 @@ App = {
           }).then(function (result) {
             houseTemplate.find('.rent-cost').text(result);
             }).then(function (){
-              houseTemplate.find('.btn-rent').attr('data-id', id);
+              houseTemplate.find('.btn-rent').hide()
               houseRow.append(houseTemplate.html());       
             })}
     }).catch(function (err) {
@@ -198,7 +201,7 @@ App = {
       // Execute adopt as a transaction by sending account
       return rentContract.AddHouse(address, price, { from: currentAccount });
       }).then(function (result) {
-        return App.getAvailableHouses();
+        location.reload()
     }).catch(function (err) {
       console.log(err.message);
     });
