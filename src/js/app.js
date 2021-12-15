@@ -57,23 +57,20 @@ App = {
     
     event.preventDefault();
 
-    var id = $(event.target).data('id');
+    var id = $(event.target).closest('.house-element').data(id);
 
     if (id == undefined)
     {
       return;
     }
 
-    var houseId = parseInt(id);
+    var houseId = parseInt(id.id);
 
     var rentContract;
 
     App.contracts.RentContract.deployed().then(function (instance) {
 
       rentContract = instance;
-
-      console.log(houseId);
-      
       return rentContract.RemoveHouse(houseId, {from:currentAccount})
     }).then(function (result)
     {
@@ -88,7 +85,16 @@ App = {
   handleRent: function(event) {
     event.preventDefault();
 
-    var houseId = parseInt($(event.target).data('id'));
+    var id = $(event.target).closest('.house-element').data(id);
+
+    if (id == undefined)
+    {
+      return;
+    }
+
+    var houseId = parseInt(id.id);
+
+    console.log(houseId);
 
     var rentContract;
 
@@ -96,8 +102,6 @@ App = {
 
       rentContract = instance;
 
-      console.log(houseId);
-      
       return rentContract.GetRentCost(houseId)
     }).then(function (result)
     {
@@ -112,8 +116,7 @@ App = {
 
   getAllHouses: function()
   {
-    var addressToSet = document.getElementById("currentAddress").textContent = currentAccount;
-    console.log(addressToSet);
+    document.getElementById("currentAddress").textContent = currentAccount;
     App.getAvailableHouses()
     App.getOwnedHouses()
     App.getRentedHouses()
@@ -147,7 +150,7 @@ App = {
             }).then(function (){
               houseTemplate.find('.btn-rent').show()
               houseTemplate.find('.btn-delete').hide()
-              houseTemplate.find('.btn-rent').attr('data-id', id);
+              houseTemplate.find('.house-element').attr('data-id', id);
               houseRow.append(houseTemplate.html());       
             })}
     }).catch(function (err) {
@@ -172,6 +175,8 @@ App = {
 
         for (var i = 0; i < ids.length; i++) {
 
+          houseTemplate.attr('data-id', id);
+
           var id = ids[i].c[0] // ??? i hate javascript        
           await rentContract.GetHouseAddress(id).then(function (result) {     
             houseTemplate.find('.house-location').text(result);
@@ -179,12 +184,9 @@ App = {
           }).then(function (result) {
             houseTemplate.find('.rent-cost').text(result);
             }).then(function (){
-              console.log(id);
-              var button = houseTemplate.find('.btn-delete');
-              console.log(button);
-              button.show()
+              houseTemplate.find('.house-element').attr('data-id', id);
+              houseTemplate.find('.btn-delete').show()
               houseTemplate.find('.btn-rent').hide()
-              button.attr('data-id', id);
               houseRow.append(houseTemplate.html());       
             })}
     }).catch(function (err) {
