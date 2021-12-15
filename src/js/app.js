@@ -68,9 +68,10 @@ App = {
     {
       var cost = result.c[0]
       console.log(cost);
-      rentContract.RentFrom(houseId, {value: cost * 10**18, from:currentAccount})
-    }).then(function(result)
+      return rentContract.RentFrom(houseId, {value: cost * 10**18, from:currentAccount})
+    }).then(function()
     {
+      console.log("qweqweqw")
       location.reload()
     });
     
