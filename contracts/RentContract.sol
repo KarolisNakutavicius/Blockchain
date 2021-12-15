@@ -58,6 +58,8 @@ contract RentContract
 
         delete Houses[id];
 
+        HousesCount--;
+
         return true;
     }
     

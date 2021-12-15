@@ -54,26 +54,35 @@ App = {
   },
 
   handleDelete: function(event) {
+    
     event.preventDefault();
 
-    var houseId = parseInt($(event.target).data('id'));
+    var id = $(event.target).data('id');
+
+    if (id == undefined)
+    {
+      return;
+    }
+
+    var houseId = parseInt(id);
 
     var rentContract;
 
     App.contracts.RentContract.deployed().then(function (instance) {
 
       rentContract = instance;
+
+      console.log(houseId);
       
-      return rentContract.GetRentCost(houseId)
+      return rentContract.RemoveHouse(houseId, {from:currentAccount})
     }).then(function (result)
     {
-      var cost = result.c[0]
-      return rentContract.RentFrom(houseId, {value: cost * 10**18, from:currentAccount})
-    }).then(function()
-    {
+      if(!result)
+      {
+        alert("Could not delete the house. Check if it is not rented");
+      }
       location.reload()
-    });
-    
+    });    
   },
 
   handleRent: function(event) {
@@ -86,6 +95,8 @@ App = {
     App.contracts.RentContract.deployed().then(function (instance) {
 
       rentContract = instance;
+
+      console.log(houseId);
       
       return rentContract.GetRentCost(houseId)
     }).then(function (result)
@@ -102,7 +113,6 @@ App = {
   getAllHouses: function()
   {
     var addressToSet = document.getElementById("currentAddress").textContent = currentAccount;
-    addressToSet.value
     console.log(addressToSet);
     App.getAvailableHouses()
     App.getOwnedHouses()
@@ -163,18 +173,18 @@ App = {
         for (var i = 0; i < ids.length; i++) {
 
           var id = ids[i].c[0] // ??? i hate javascript        
-
-          console.log(id);
-
           await rentContract.GetHouseAddress(id).then(function (result) {     
             houseTemplate.find('.house-location').text(result);
             return rentContract.GetRentCost(id);            
           }).then(function (result) {
             houseTemplate.find('.rent-cost').text(result);
             }).then(function (){
+              console.log(id);
+              var button = houseTemplate.find('.btn-delete');
+              console.log(button);
+              button.show()
               houseTemplate.find('.btn-rent').hide()
-              houseTemplate.find('.btn-delete').show()
-              houseTemplate.find('.btn-delete').attr('data-id', id);
+              button.attr('data-id', id);
               houseRow.append(houseTemplate.html());       
             })}
     }).catch(function (err) {
@@ -207,7 +217,8 @@ App = {
           }).then(function (result) {
             houseTemplate.find('.rent-cost').text(result);
             }).then(function (){
-              houseTemplate.find('.btn-rent').hide()
+              houseTemplate.find('.btn-rent').hide();
+              houseTemplate.find('.btn-delete').hide();
               houseRow.append(houseTemplate.html());       
             })}
     }).catch(function (err) {
