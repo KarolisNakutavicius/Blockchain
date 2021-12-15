@@ -47,9 +47,33 @@ App = {
   bindEvents: function() {
     $(document).on('click', '.add-property', App.handleAdd);
     $(document).on('click', '.btn-rent', App.handleRent);
+    $(document).on('click', '.btn-delete', App.handleDelete);
     window.ethereum.on('accountsChanged', function (accounts) {
       location.reload()
     })
+  },
+
+  handleDelete: function(event) {
+    event.preventDefault();
+
+    var houseId = parseInt($(event.target).data('id'));
+
+    var rentContract;
+
+    App.contracts.RentContract.deployed().then(function (instance) {
+
+      rentContract = instance;
+      
+      return rentContract.GetRentCost(houseId)
+    }).then(function (result)
+    {
+      var cost = result.c[0]
+      return rentContract.RentFrom(houseId, {value: cost * 10**18, from:currentAccount})
+    }).then(function()
+    {
+      location.reload()
+    });
+    
   },
 
   handleRent: function(event) {
@@ -67,11 +91,9 @@ App = {
     }).then(function (result)
     {
       var cost = result.c[0]
-      console.log(cost);
       return rentContract.RentFrom(houseId, {value: cost * 10**18, from:currentAccount})
     }).then(function()
     {
-      console.log("qweqweqw")
       location.reload()
     });
     
@@ -113,6 +135,8 @@ App = {
           }).then(function (result) {
             houseTemplate.find('.rent-cost').text(result);
             }).then(function (){
+              houseTemplate.find('.btn-rent').show()
+              houseTemplate.find('.btn-delete').hide()
               houseTemplate.find('.btn-rent').attr('data-id', id);
               houseRow.append(houseTemplate.html());       
             })}
@@ -149,6 +173,8 @@ App = {
             houseTemplate.find('.rent-cost').text(result);
             }).then(function (){
               houseTemplate.find('.btn-rent').hide()
+              houseTemplate.find('.btn-delete').show()
+              houseTemplate.find('.btn-delete').attr('data-id', id);
               houseRow.append(houseTemplate.html());       
             })}
     }).catch(function (err) {
@@ -201,7 +227,7 @@ App = {
       var rentContract = instance;
       // Execute adopt as a transaction by sending account
       return rentContract.AddHouse(address, price, { from: currentAccount });
-      }).then(function (result) {
+      }).then(function () {
         location.reload()
     }).catch(function (err) {
       console.log(err.message);
