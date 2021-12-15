@@ -1,25 +1,9 @@
 App = {
   web3Provider: null,
   contracts: {},
+  currentAccount: null,
 
   init: async function() {
-    // Load pets.
-    $.getJSON('../pets.json', function(data) {
-      var petsRow = $('#petsRow');
-      var petTemplate = $('#petTemplate');
-
-      for (i = 0; i < data.length; i ++) {
-        petTemplate.find('.panel-title').text(data[i].name);
-        petTemplate.find('img').attr('src', data[i].picture);
-        petTemplate.find('.pet-breed').text(data[i].breed);
-        petTemplate.find('.pet-age').text(data[i].age);
-        petTemplate.find('.pet-location').text(data[i].location);
-        petTemplate.find('.btn-adopt').attr('data-id', data[i].id);
-
-        petsRow.append(petTemplate.html());
-      }
-    });
-
     return await App.initWeb3();
   },
 
@@ -28,90 +12,278 @@ App = {
     if (window.ethereum) {
       App.web3Provider = window.ethereum;
       try {
-        // Request account access
         await window.ethereum.request({ method: "eth_requestAccounts" });;
       } catch (error) {
-        // User denied account access...
         console.error("User denied account access")
       }
     }
-    // Legacy dapp browsers...
     else if (window.web3) {
       App.web3Provider = window.web3.currentProvider;
     }
-    // If no injected web3 instance is detected, fall back to Ganache
     else {
       App.web3Provider = new Web3.providers.HttpProvider('http://localhost:7545');
     }
     web3 = new Web3(App.web3Provider);
+
+    currentAccount = web3.currentProvider.selectedAddress
 
     return App.initContract();
   },
 
   initContract: function() {
 
-    $.getJSON('Adoption.json', function (data) {
-      // Get the necessary contract artifact file and instantiate it with @truffle/contract
-      var AdoptionArtifact = data;
-      App.contracts.Adoption = TruffleContract(AdoptionArtifact);
+    $.getJSON('RentContract.json', function (data) {
+      var RentArtifact = data;
+      App.contracts.RentContract = TruffleContract(RentArtifact);
 
-      // Set the provider for our contract
-      App.contracts.Adoption.setProvider(App.web3Provider);
+      App.contracts.RentContract.setProvider(App.web3Provider);
 
-      // Use our contract to retrieve and mark the adopted pets
-      return App.markAdopted();
+      return App.getAllHouses();
     });
 
     return App.bindEvents();
   },
 
   bindEvents: function() {
-    $(document).on('click', '.btn-adopt', App.handleAdopt);
+    $(document).on('click', '.add-property', App.handleAdd);
+    $(document).on('click', '.btn-rent', App.handleRent);
+    $(document).on('click', '.btn-delete', App.handleDelete);
+    $(document).on('click', '.btn-change', App.handleChange);
+    window.ethereum.on('accountsChanged', function (accounts) {
+      location.reload()
+    })
   },
 
-  markAdopted: function() {
-    var adoptionInstance;
-
-    App.contracts.Adoption.deployed().then(function(instance) {
-      adoptionInstance = instance;
+  handleChange: function(event) {
     
-      return adoptionInstance.getAdopters.call();
-    }).then(function(adopters) {
-      for (i = 0; i < adopters.length; i++) {
-        if (adopters[i] !== '0x0000000000000000000000000000000000000000') {
-          $('.panel-pet').eq(i).find('button').text('Success').attr('disabled', true);
-        }
-      }
-    }).catch(function(err) {
-      console.log(err.message);
-    });
-
-  },
-
-  handleAdopt: function (event) {
     event.preventDefault();
 
-    var petId = parseInt($(event.target).data('id'));
+    var id = $(event.target).closest('.house-element').data(id);
 
-    var adoptionInstance;
+    if (id == undefined)
+    {
+      return;
+    }
 
-    web3.eth.getAccounts(function (error, accounts) {
-      if (error) {
-        console.log(error);
+    var houseId = parseInt(id.id);
+
+    var rentContract;
+
+    App.contracts.RentContract.deployed().then(function (instance) {
+
+      rentContract = instance;
+
+      var newPrice = $(event.target).closest('.house-element').find("input[name=rent-price]").val();
+      console.log(newPrice);
+
+      if (newPrice <= 0)
+      {
+        alert("new price must be highet than 0");
       }
 
-      var account = accounts[0];
+      return rentContract.UpdateCost(houseId, newPrice, {from:currentAccount})
+    }).then(function (result)
+    {
+      if(!result)
+      {
+        alert("Could not delete the house. Check if it is not rented");
+      }
+      location.reload()
+    });    
+  },
 
-      App.contracts.Adoption.deployed().then(function (instance) {
-        adoptionInstance = instance;
+  handleDelete: function(event) {
+    
+    event.preventDefault();
 
-        // Execute adopt as a transaction by sending account
-        return adoptionInstance.adopt(petId, { from: account });
-      }).then(function (result) {
-        return App.markAdopted();
-      }).catch(function (err) {
-        console.log(err.message);
-      });
+    var id = $(event.target).closest('.house-element').data(id);
+
+    if (id == undefined)
+    {
+      return;
+    }
+
+    var houseId = parseInt(id.id);
+
+    var rentContract;
+
+    App.contracts.RentContract.deployed().then(function (instance) {
+
+      rentContract = instance;
+      return rentContract.RemoveHouse(houseId, {from:currentAccount})
+    }).then(function (result)
+    {
+      if(!result)
+      {
+        alert("Could not delete the house. Check if it is not rented");
+      }
+      location.reload()
+    });    
+  },
+
+  handleRent: function(event) {
+    event.preventDefault();
+
+    var id = $(event.target).closest('.house-element').data(id);
+
+    if (id == undefined)
+    {
+      return;
+    }
+
+    var houseId = parseInt(id.id);
+
+    console.log(houseId);
+
+    var rentContract;
+
+    App.contracts.RentContract.deployed().then(function (instance) {
+
+      rentContract = instance;
+
+      return rentContract.GetRentCost(houseId)
+    }).then(function (result)
+    {
+      var cost = result.c[0]
+      return rentContract.RentFrom(houseId, {value: cost * 10**18, from:currentAccount})
+    }).then(function()
+    {
+      location.reload()
+    });
+    
+  },
+
+  getAllHouses: function()
+  {
+    document.getElementById("currentAddress").textContent = currentAccount;
+    App.getAvailableHouses()
+    App.getOwnedHouses()
+    App.getRentedHouses()
+  },
+
+  getAvailableHouses: function () {
+
+    var rentContract;
+
+    App.contracts.RentContract.deployed().then(function (instance) {
+
+      rentContract = instance;
+
+      return rentContract.AvailableHouses({from:currentAccount});           
+
+    }).then(async function (availableHousesIds) {
+
+      var ids = availableHousesIds;
+      var houseRow = $('#housesToRentRow');
+      var houseTemplate = $('#housesTemplate');
+
+        for (var i = 0; i < ids.length; i++) {
+
+          var id = ids[i].c[0] // ??? i hate javascript        
+
+          await rentContract.GetHouseAddress(id).then(function (result) {     
+            houseTemplate.find('.house-location').text(result);
+            return rentContract.GetRentCost(id);            
+          }).then(function (result) {
+            houseTemplate.find('.rent-cost').text(result);
+            }).then(function (){
+              houseTemplate.find('.btn-rent').show()
+              houseTemplate.find('.btn-delete').hide()
+              houseTemplate.find('.house-element').attr('data-id', id);
+              houseRow.append(houseTemplate.html());       
+            })}
+    }).catch(function (err) {
+      console.log(err.message);
+    });
+  },
+
+  getOwnedHouses: function()
+  {
+    var rentContract;
+
+    App.contracts.RentContract.deployed().then(function (instance) {
+
+      rentContract = instance;
+
+      return rentContract.GetOwnedHouses({from:currentAccount});           
+    }).then(async function (availableHousesIds) {
+
+      var ids = availableHousesIds;
+      var houseRow = $('#housesOwnedRow');
+      var houseTemplate = $('#housesTemplate');
+
+        for (var i = 0; i < ids.length; i++) {
+
+          houseTemplate.attr('data-id', id);
+
+          var id = ids[i].c[0] // ??? i hate javascript        
+          await rentContract.GetHouseAddress(id).then(function (result) {     
+            houseTemplate.find('.house-location').text(result);
+            return rentContract.GetRentCost(id);            
+          }).then(function (result) {
+            houseTemplate.find('.rent-cost').text(result);
+            }).then(function (){
+              houseTemplate.find('.house-element').attr('data-id', id);
+              houseTemplate.find('.btn-delete').show()
+              houseTemplate.find('.change-price-form').show()
+              houseTemplate.find('.btn-rent').hide()              
+              houseRow.append(houseTemplate.html());       
+            })}
+    }).catch(function (err) {
+      console.log(err.message);
+    });
+  },
+
+  getRentedHouses: function()
+  {
+    var rentContract;
+
+    App.contracts.RentContract.deployed().then(function (instance) {
+
+      rentContract = instance;
+
+      return rentContract.GetRentedHouses({from:currentAccount});           
+    }).then(async function (availableHousesIds) {
+
+      var ids = availableHousesIds;
+      var houseRow = $('#housesRentedRow');
+      var houseTemplate = $('#housesTemplate');
+
+        for (var i = 0; i < ids.length; i++) {
+
+          var id = ids[i].c[0] // ??? i hate javascript        
+
+          await rentContract.GetHouseAddress(id).then(function (result) {     
+            houseTemplate.find('.house-location').text(result);
+            return rentContract.GetRentCost(id);            
+          }).then(function (result) {
+            houseTemplate.find('.rent-cost').text(result);
+            }).then(function (){
+              houseTemplate.find('.btn-rent').hide();
+              houseTemplate.find('.btn-delete').hide();
+              houseRow.append(houseTemplate.html());       
+            })}
+    }).catch(function (err) {
+      console.log(err.message);
+    });
+  },
+
+  handleAdd: function (event) {
+
+    event.preventDefault();
+
+    var address = $('#propertyAddress').val();
+    var price = $('#rentPrice').val();
+
+    App.contracts.RentContract.deployed().then(function (instance) {
+
+      var rentContract = instance;
+      // Execute adopt as a transaction by sending account
+      return rentContract.AddHouse(address, price, { from: currentAccount });
+      }).then(function () {
+        location.reload()
+    }).catch(function (err) {
+      console.log(err.message);
     });
   }
 
