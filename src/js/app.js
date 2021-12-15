@@ -53,6 +53,27 @@ App = {
 
   bindEvents: function() {
     $(document).on('click', '.add-property', App.handleAdd);
+    $(document).on('click', '.btn-rent', App.handleRent);
+  },
+
+  handleRent: function(event) {
+    event.preventDefault();
+
+    var houseId = parseInt($(event.target).data('id'));
+
+    var rentContract;
+
+    App.contracts.RentContract.deployed().then(function (instance) {
+
+      rentContract = instance;
+      
+      return rentContract.GetRentCost(houseId)
+    }).then(function (result)
+    {
+      var cost = result.c[0]
+      console.log(cost);
+      rentContract.RentFrom(houseId, {value: cost * 10**18, from:currentAccount})
+    });  
   },
 
   getAllHouses: function()
@@ -139,7 +160,7 @@ App = {
 
       rentContract = instance;
 
-      return rentContract.GerRentedHouses({from:currentAccount});           
+      return rentContract.GetRentedHouses({from:currentAccount});           
     }).then(async function (availableHousesIds) {
 
       var ids = availableHousesIds;
