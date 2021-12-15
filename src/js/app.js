@@ -48,9 +48,48 @@ App = {
     $(document).on('click', '.add-property', App.handleAdd);
     $(document).on('click', '.btn-rent', App.handleRent);
     $(document).on('click', '.btn-delete', App.handleDelete);
+    $(document).on('click', '.btn-change', App.handleChange);
     window.ethereum.on('accountsChanged', function (accounts) {
       location.reload()
     })
+  },
+
+  handleChange: function(event) {
+    
+    event.preventDefault();
+
+    var id = $(event.target).closest('.house-element').data(id);
+
+    if (id == undefined)
+    {
+      return;
+    }
+
+    var houseId = parseInt(id.id);
+
+    var rentContract;
+
+    App.contracts.RentContract.deployed().then(function (instance) {
+
+      rentContract = instance;
+
+      var newPrice = $(event.target).closest('.house-element').find("input[name=rent-price]").val();
+      console.log(newPrice);
+
+      if (newPrice <= 0)
+      {
+        alert("new price must be highet than 0");
+      }
+
+      return rentContract.UpdateCost(houseId, newPrice, {from:currentAccount})
+    }).then(function (result)
+    {
+      if(!result)
+      {
+        alert("Could not delete the house. Check if it is not rented");
+      }
+      location.reload()
+    });    
   },
 
   handleDelete: function(event) {
@@ -186,7 +225,8 @@ App = {
             }).then(function (){
               houseTemplate.find('.house-element').attr('data-id', id);
               houseTemplate.find('.btn-delete').show()
-              houseTemplate.find('.btn-rent').hide()
+              houseTemplate.find('.change-price-form').show()
+              houseTemplate.find('.btn-rent').hide()              
               houseRow.append(houseTemplate.html());       
             })}
     }).catch(function (err) {
